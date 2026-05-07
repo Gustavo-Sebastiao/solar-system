@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Solar 3D - Maquete Interativa</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <script>
+        // FORCED CLEANUP: This script runs immediately and ensures the UI is unlocked
+        // even if Three.js or heavy models fail to load.
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM loaded. Starting safety timers...");
+            const ls = document.getElementById('loading-screen');
+            const skipBtn = document.getElementById('skip-loading');
+            
+            // Show skip button after 5 seconds
+            setTimeout(() => {
+                if (skipBtn) {
+                    skipBtn.classList.remove('hidden');
+                    skipBtn.style.display = 'block';
+                }
+            }, 5000);
+
+            // Force hide after 12 seconds
+            setTimeout(() => {
+                if (ls && !ls.classList.contains('hidden')) {
+                    console.warn("Safety timeout: Force hiding loading screen.");
+                    ls.style.opacity = '0';
+                    setTimeout(() => ls.style.display = 'none', 1000);
+                }
+            }, 12000);
+        });
+    </script>
+    <div id="ui-layer">
+        <header>
+            <h1>SISTEMA SOLAR</h1>
+            <p>Explore o cosmos • Clique nos planetas</p>
+        </header>
+
+        <div id="planet-info" class="hidden">
+            <h2 id="planet-name">Nome do Planeta</h2>
+            <p id="planet-details">Explore o modelo 3D em detalhes.</p>
+            <div id="planet-controls">
+                <button id="prev-planet" title="Anterior">←</button>
+                <button id="back-button">Geral</button>
+                <button id="next-planet" title="Próximo">→</button>
+            </div>
+        </div>
+
+        <div id="loading-screen">
+            <div class="loader"></div>
+            <p id="loading-text">Carregando Universo...</p>
+            <button id="skip-loading" class="hidden">Pular Carregamento</button>
+        </div>
+    </div>
+
+    <canvas id="three-canvas"></canvas>
+
+    <script type="module" src="js/script.js?v=2"></script>
+</body>
+</html>
