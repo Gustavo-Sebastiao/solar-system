@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // --- Configuration & Data ---
 // --- Configuration & Data ---
-const ASSETS_PATH = './assets/solar_3d_models/'; // Keep relative but try to log content
+const ASSETS_PATH = 'assets/solar_3d_models/'; // No dot prefix
 
 async function checkLFS(url) {
     try {
@@ -12,8 +12,12 @@ async function checkLFS(url) {
         const text = await response.text();
         if (text.includes('version https://git-lfs')) {
             console.error("LFS DETECTED: Files on server are just pointers, not binaries!", url);
-            if (loadingText) loadingText.innerHTML += `<br><span style="color:red">ERRO: Git LFS Pointers detectados no servidor!</span>`;
+            if (loadingText) loadingText.innerHTML += `<br><span style="color:red">ERRO: Git LFS Pointers detectados!</span>`;
             return true;
+        }
+        if (!response.ok) {
+            console.error(`HTTP ERROR: ${response.status} for ${url}`);
+            if (loadingText) loadingText.innerHTML += `<br><span style="color:red">ERRO HTTP ${response.status}: ${url.split('/').pop()}</span>`;
         }
     } catch (e) {}
     return false;
