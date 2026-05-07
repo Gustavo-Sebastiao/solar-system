@@ -4,7 +4,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // --- Configuration & Data ---
 // --- Configuration & Data ---
-const ASSETS_PATH = 'assets/solar_3d_models/'; // No dot prefix
+// --- Configuration & Data ---
+const ASSETS_PATH = 'https://cdn.jsdelivr.net/gh/Gustavo-Sebastiao/solar-system@main/assets/solar_3d_models/'; 
 
 async function checkLFS(url) {
     try {
