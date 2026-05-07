@@ -26,7 +26,10 @@ const MOON_DATA = {
 
 // --- Scene Setup ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000); // Black Background
+scene.background = new THREE.Color(0x050505); // Very dark grey instead of pure black
+const axesHelper = new THREE.AxesHelper(5000);
+scene.add(axesHelper);
+
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 50000);
 camera.position.set(500, 200, 2500);
 
@@ -80,7 +83,7 @@ let isLoaded = false;
 function onModelLoaded(name) {
     loadedCount++;
     console.log(`Loaded: ${name} (${loadedCount}/${PLANETS_DATA.length + 1})`);
-    if (loadingText) loadingText.innerText = `Carregando: ${name}...`;
+    if (loadingText) loadingText.innerText = `Carregando: ${name} (${loadedCount}/${PLANETS_DATA.length + 1})`;
 
     if (loadedCount >= PLANETS_DATA.length + 1) {
         hideLoading();
