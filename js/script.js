@@ -10,8 +10,9 @@ async function checkLFS(url) {
     try {
         const response = await fetch(url, { method: 'GET', headers: { 'Range': 'bytes=0-100' } });
         const text = await response.text();
-        if (text.includes('git-lfs')) {
+        if (text.includes('version https://git-lfs')) {
             console.error("LFS DETECTED: Files on server are just pointers, not binaries!", url);
+            if (loadingText) loadingText.innerHTML += `<br><span style="color:red">ERRO: Git LFS Pointers detectados no servidor!</span>`;
             return true;
         }
     } catch (e) {}
