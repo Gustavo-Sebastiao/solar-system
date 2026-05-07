@@ -103,7 +103,17 @@ let isLoaded = false;
 function onModelLoaded(name) {
     loadedCount++;
     console.log(`Loaded: ${name} (${loadedCount}/${PLANETS_DATA.length + 1})`);
-    if (loadingText) loadingText.innerText = `Carregando: ${name} (${loadedCount}/${PLANETS_DATA.length + 1})`;
+    
+    if (loadingText) {
+        // Find or create a status line so we don't overwrite red errors
+        let statusLine = document.getElementById('loading-status-line');
+        if (!statusLine) {
+            statusLine = document.createElement('div');
+            statusLine.id = 'loading-status-line';
+            loadingText.prepend(statusLine);
+        }
+        statusLine.innerText = `Carregando: ${name} (${loadedCount}/${PLANETS_DATA.length + 1})`;
+    }
 
     if (loadedCount >= PLANETS_DATA.length + 1) {
         hideLoading();
