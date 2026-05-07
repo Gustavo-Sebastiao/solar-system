@@ -3,7 +3,22 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // --- Configuration & Data ---
-const ASSETS_PATH = './assets/solar_3d_models/';
+// --- Configuration & Data ---
+const ASSETS_PATH = './assets/solar_3d_models/'; // Keep relative but try to log content
+
+async function checkLFS(url) {
+    try {
+        const response = await fetch(url, { method: 'GET', headers: { 'Range': 'bytes=0-100' } });
+        const text = await response.text();
+        if (text.includes('git-lfs')) {
+            console.error("LFS DETECTED: Files on server are just pointers, not binaries!", url);
+            return true;
+        }
+    } catch (e) {}
+    return false;
+}
+
+checkLFS(ASSETS_PATH + 'sun.glb');
 const PLANETS_DATA = [
     { name: 'Sol', file: 'sun.glb', size: 2500, distance: -1600, type: 'Estrela', temp: '5.505 °C', fact: 'Contém 99,86% da massa de todo o sistema solar e é a fonte de energia que sustenta a vida na Terra.', speed: 0.001 },
     { name: 'Mercúrio', file: 'mercury_natural_color.glb', size: 35, distance: 0, type: 'Planeta Rochoso', temp: '-180 °C a 430 °C', fact: 'É o menor planeta do sistema solar e o mais próximo do Sol, completando uma volta em torno dele em apenas 88 dias.', speed: 0.005 },
