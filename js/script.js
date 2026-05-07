@@ -216,25 +216,33 @@ PLANETS_DATA.forEach(data => {
                 child.frustumCulled = false;
                 child.userData.planetName = data.name;
 
+                // DEBUG: Force basic material to rule out lighting
+                // const oldMat = child.material;
+                // child.material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
+
                 const materials = Array.isArray(child.material) ? child.material : [child.material];
                 materials.forEach(mat => {
                     if (mat) {
                         if (data.name === 'Sol') {
                             if (mat.emissive) {
-                                mat.emissive.setHex(0xff5500); // Deep Orange
-                                mat.emissiveIntensity = 6.0;
+                                mat.emissive.setHex(0xff5500); 
+                                mat.emissiveIntensity = 10.0;
                             }
-                            mat.color.setHex(0xffaa00); // Orange base color
+                            mat.color.setHex(0xffaa00);
                         } else {
                             if (mat.emissive) {
-                                mat.emissive.setHex(0x000000); // Remove emissive to kill haze
-                                mat.emissiveIntensity = 3.0;
+                                mat.emissive.setHex(0x000000);
                             }
                         }
                     }
                 });
             }
         });
+
+        // DEBUG: Box Helper
+        const helper = new THREE.BoxHelper(model, 0xffff00);
+        scene.add(helper);
+        console.log(`Model ${data.name} added at X: ${model.position.x}, Scale: ${scaleFactor}`);
 
         // Track Earth for Moon attachment
         if (data.name === 'Terra') {
