@@ -3,28 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // --- Configuration & Data ---
-// --- Configuration & Data ---
-// --- Configuration & Data ---
-const ASSETS_PATH = 'https://cdn.jsdelivr.net/gh/Gustavo-Sebastiao/solar-system@main/assets/solar_3d_models/'; 
+const ASSETS_PATH = './assets/solar_3d_models/'; 
 
-async function checkLFS(url) {
-    try {
-        const response = await fetch(url, { method: 'GET', headers: { 'Range': 'bytes=0-100' } });
-        const text = await response.text();
-        if (text.includes('version https://git-lfs')) {
-            console.error("LFS DETECTED: Files on server are just pointers, not binaries!", url);
-            if (loadingText) loadingText.innerHTML += `<br><span style="color:red">ERRO: Git LFS Pointers detectados!</span>`;
-            return true;
-        }
-        if (!response.ok) {
-            console.error(`HTTP ERROR: ${response.status} for ${url}`);
-            if (loadingText) loadingText.innerHTML += `<br><span style="color:red">ERRO HTTP ${response.status}: ${url.split('/').pop()}</span>`;
-        }
-    } catch (e) {}
-    return false;
-}
-
-checkLFS(ASSETS_PATH + 'sun.glb');
 const PLANETS_DATA = [
     { name: 'Sol', file: 'sun.glb', size: 2500, distance: -1600, type: 'Estrela', temp: '5.505 °C', fact: 'Contém 99,86% da massa de todo o sistema solar e é a fonte de energia que sustenta a vida na Terra.', speed: 0.001 },
     { name: 'Mercúrio', file: 'mercury_natural_color.glb', size: 35, distance: 0, type: 'Planeta Rochoso', temp: '-180 °C a 430 °C', fact: 'É o menor planeta do sistema solar e o mais próximo do Sol, completando uma volta em torno dele em apenas 88 dias.', speed: 0.005 },
@@ -47,10 +27,7 @@ const MOON_DATA = {
 
 // --- Scene Setup ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050505); // Very dark grey instead of pure black
-const axesHelper = new THREE.AxesHelper(5000);
-scene.add(axesHelper);
-
+scene.background = new THREE.Color(0x000000); 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 50000);
 camera.position.set(500, 200, 2500);
 
@@ -78,23 +55,18 @@ controls.dampingFactor = 0.05;
 
 // --- Lighting ---
 const sunLight = new THREE.DirectionalLight(0xffffff, 4.0);
-sunLight.position.set(-2000, 0, 0); // Pointing from far left to right
-sunLight.target.position.set(5000, 0, 0); // Target far right
+sunLight.position.set(-2000, 0, 0); 
+sunLight.target.position.set(5000, 0, 0); 
 scene.add(sunLight);
 scene.add(sunLight.target);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Enough to see the planet, but dark enough for contrast
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); 
 scene.add(ambientLight);
-
-// All other fill lights (frontLight, hemiLight) removed for sharp crescent effect
-
-// --- Starfield Removed for White Background ---
-
 
 // --- Loaders & Data Handling ---
 const loader = new GLTFLoader();
-const planetGroups = {}; // Stores the orbit pivot group
-const planetModels = {}; // Stores the GLTF scene itself
+const planetGroups = {}; 
+const planetModels = {}; 
 const loadingScreen = document.getElementById('loading-screen');
 const loadingText = document.getElementById('loading-text');
 const skipButton = document.getElementById('skip-loading');
@@ -103,18 +75,7 @@ let isLoaded = false;
 
 function onModelLoaded(name) {
     loadedCount++;
-    console.log(`Loaded: ${name} (${loadedCount}/${PLANETS_DATA.length + 1})`);
-    
-    if (loadingText) {
-        // Find or create a status line so we don't overwrite red errors
-        let statusLine = document.getElementById('loading-status-line');
-        if (!statusLine) {
-            statusLine = document.createElement('div');
-            statusLine.id = 'loading-status-line';
-            loadingText.prepend(statusLine);
-        }
-        statusLine.innerText = `Carregando: ${name} (${loadedCount}/${PLANETS_DATA.length + 1})`;
-    }
+    if (loadingText) loadingText.innerText = `Carregando: ${name} (${loadedCount}/${PLANETS_DATA.length + 1})`;
 
     if (loadedCount >= PLANETS_DATA.length + 1) {
         hideLoading();
@@ -124,8 +85,6 @@ function onModelLoaded(name) {
 function hideLoading() {
     if (isLoaded) return;
     isLoaded = true;
-    console.log("All models ready or timeout reached. Hiding loading screen.");
-
     if (loadingScreen) {
         setTimeout(() => {
             loadingScreen.classList.add('hidden');
@@ -135,75 +94,52 @@ function hideLoading() {
 }
 
 function startCinematicIntro() {
-    console.log("Starting cinematic intro...");
     // Start close to the Sun
     camera.position.set(-1000, 100, 1000);
     controls.target.set(-1600, 0, 0);
 
-    // Lerp to the overview position (Static Side View)
+    // Lerp to the overview position
     targetFocus = {
         isReset: true,
-        camPos: new THREE.Vector3(400, 0, 3000), // Straight side view (Y=0)
+        camPos: new THREE.Vector3(400, 0, 3000),
         target: new THREE.Vector3(400, 0, 0)
     };
     isMoving = true;
 }
 
-// Show skip button after 6 seconds
-setTimeout(() => {
-    if (!isLoaded && skipButton) skipButton.classList.remove('hidden');
-}, 6000);
-
 if (skipButton) skipButton.onclick = hideLoading;
+setTimeout(hideLoading, 15000); // Safety timeout
 
-// Safety timeout: Hide loading screen after 12 seconds
-setTimeout(hideLoading, 12000);
-
-// Load Moon separately and keep track if it's ready
+// Load Moon
 let moonModel = null;
 let earthModel = null;
 let moonOrbit = new THREE.Group();
 
 function tryAttachMoon() {
     if (moonModel && earthModel) {
-        // Find Earth's parent pivot group to add the Moon's orbit group to it
         const earthPivot = planetGroups['Terra'];
         if (earthPivot) {
             earthPivot.add(moonOrbit);
-            moonOrbit.position.x = 400; // Same as Earth's distance
+            moonOrbit.position.set(400, 0, 0); // Reset local to Earth
             moonOrbit.add(moonModel);
-            moonModel.position.set(100, 0, 0); // Distance from Earth
+            moonModel.position.set(120, 0, 0); // Orbit distance
         }
     }
 }
 
 loader.load(ASSETS_PATH + 'moon.glb', (gltf) => {
     moonModel = gltf.scene;
-    // Normalize Moon Size (Smaller than Earth)
     const box = new THREE.Box3().setFromObject(moonModel);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    
     const scaleFactor = 18 / Math.max(size.x, size.y, size.z);
     moonModel.scale.setScalar(scaleFactor);
-    
-    // Center Moon
-    moonModel.position.x = -(center.x * scaleFactor);
-    moonModel.position.y = -(center.y * scaleFactor);
-    moonModel.position.z = -(center.z * scaleFactor);
+    moonModel.position.set(-(center.x * scaleFactor), -(center.y * scaleFactor), -(center.z * scaleFactor));
 
-    // Setup moon material
     moonModel.traverse(child => {
         if (child.isMesh) {
             child.frustumCulled = false;
             child.userData.planetName = 'Lua';
-            const materials = Array.isArray(child.material) ? child.material : [child.material];
-            materials.forEach(mat => {
-                if (mat && mat.emissive) {
-                    mat.emissive.setHex(0x222222); // Subtle glow
-                    mat.emissiveIntensity = 0.5;
-                }
-            });
         }
     });
 
@@ -218,8 +154,6 @@ loader.load(ASSETS_PATH + 'moon.glb', (gltf) => {
 PLANETS_DATA.forEach(data => {
     loader.load(ASSETS_PATH + data.file, (gltf) => {
         const model = gltf.scene;
-
-        // Normalize Scale & Center
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
@@ -227,12 +161,9 @@ PLANETS_DATA.forEach(data => {
         const scaleFactor = data.size / maxDim;
         
         model.scale.setScalar(scaleFactor);
-        
-        // Pivot Group for Orbit
         const pivot = new THREE.Group();
         scene.add(pivot);
 
-        // Position model within pivot (Centered)
         model.position.x = data.distance - (center.x * scaleFactor);
         model.position.y = -(center.y * scaleFactor);
         model.position.z = -(center.z * scaleFactor);
@@ -241,51 +172,28 @@ PLANETS_DATA.forEach(data => {
         planetGroups[data.name] = pivot;
         planetModels[data.name] = model;
 
-        // Visual Polish
         model.traverse(child => {
             if (child.isMesh) {
                 child.frustumCulled = false;
                 child.userData.planetName = data.name;
-
-                // DEBUG: Force basic material to rule out lighting
-                // const oldMat = child.material;
-                // child.material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
-
-                const materials = Array.isArray(child.material) ? child.material : [child.material];
-                materials.forEach(mat => {
-                    if (mat) {
-                        if (data.name === 'Sol') {
-                            if (mat.emissive) {
-                                mat.emissive.setHex(0xff5500); 
-                                mat.emissiveIntensity = 10.0;
-                            }
-                            mat.color.setHex(0xffaa00);
-                        } else {
-                            if (mat.emissive) {
-                                mat.emissive.setHex(0x000000);
-                            }
-                        }
+                if (data.name === 'Sol') {
+                    const mat = child.material;
+                    if (mat && mat.emissive) {
+                        mat.emissive.setHex(0xff5500);
+                        mat.emissiveIntensity = 8.0;
+                        mat.color.setHex(0xffaa00);
                     }
-                });
+                }
             }
         });
 
-        // DEBUG: Box Helper
-        const helper = new THREE.BoxHelper(model, 0xffff00);
-        scene.add(helper);
-        console.log(`Model ${data.name} added at X: ${model.position.x}, Scale: ${scaleFactor}`);
-
-        // Track Earth for Moon attachment
         if (data.name === 'Terra') {
             earthModel = model;
             tryAttachMoon();
         }
-
         onModelLoaded(data.name);
     }, undefined, (e) => {
         console.error(`Error loading ${data.name}:`, e);
-        const errorMsg = e && e.message ? e.message : "Erro desconhecido";
-        if (loadingText) loadingText.innerHTML += `<br><span style="color:red">Falha ${data.name}: ${errorMsg}</span>`;
         onModelLoaded(`${data.name} (falha)`);
     });
 });
@@ -298,119 +206,82 @@ let isMoving = false;
 
 window.addEventListener('click', (event) => {
     if (event.target.tagName === 'BUTTON') return;
-
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(scene.children, true);
 
     if (intersects.length > 0) {
         let obj = intersects[0].object;
         while (obj.parent && !obj.userData.planetName) obj = obj.parent;
-
-        if (obj.userData.planetName) {
-            focusOn(obj.userData.planetName);
-        }
+        if (obj.userData.planetName) focusOn(obj.userData.planetName);
     }
 });
 
 function focusOn(name) {
     const data = (name === 'Lua') ? MOON_DATA : PLANETS_DATA.find(p => p.name === name);
     const model = planetModels[name];
-
     let multiplier = 2.5;
     if (name === 'Júpiter') multiplier = 1.8;
     if (name === 'Sol') multiplier = 1.5;
     if (name === 'Lua') multiplier = 2.0;
 
-    targetFocus = {
-        name: name,
-        data: data,
-        camOffset: data.size * multiplier
-    };
-
+    targetFocus = { name: name, data: data, camOffset: data.size * multiplier };
     document.getElementById('planet-name').innerText = data.name;
-    document.getElementById('planet-details').innerHTML = `
-        <strong>Tipo:</strong> ${data.type}<br>
-        <strong>Temperatura:</strong> ${data.temp}<br><br>
-        ${data.fact}
-    `;
+    document.getElementById('planet-details').innerHTML = `<strong>Tipo:</strong> ${data.type}<br><strong>Temperatura:</strong> ${data.temp}<br><br>${data.fact}`;
     document.getElementById('planet-info').classList.remove('hidden');
     isMoving = true;
 }
 
 function resetView() {
-    targetFocus = {
-        isReset: true,
-        camPos: new THREE.Vector3(400, 0, 3000),
-        target: new THREE.Vector3(400, 0, 0)
-    };
+    targetFocus = { isReset: true, camPos: new THREE.Vector3(400, 0, 3000), target: new THREE.Vector3(400, 0, 0) };
     document.getElementById('planet-info').classList.add('hidden');
     isMoving = true;
 }
 
 document.getElementById('back-button').onclick = resetView;
-
 document.getElementById('next-planet').onclick = () => {
     if (!targetFocus || targetFocus.isReset) return;
-    const currentIndex = PLANETS_DATA.findIndex(p => p.name === targetFocus.name);
-    const nextIndex = (currentIndex + 1) % PLANETS_DATA.length;
-    focusOn(PLANETS_DATA[nextIndex].name);
+    const planetsOnly = PLANETS_DATA.map(p => p.name);
+    const currentIndex = planetsOnly.indexOf(targetFocus.name);
+    if (currentIndex !== -1) {
+        const nextIndex = (currentIndex + 1) % planetsOnly.length;
+        focusOn(planetsOnly[nextIndex]);
+    }
 };
 
 document.getElementById('prev-planet').onclick = () => {
     if (!targetFocus || targetFocus.isReset) return;
-    const currentIndex = PLANETS_DATA.findIndex(p => p.name === targetFocus.name);
-    const prevIndex = (currentIndex - 1 + PLANETS_DATA.length) % PLANETS_DATA.length;
-    focusOn(PLANETS_DATA[prevIndex].name);
+    const planetsOnly = PLANETS_DATA.map(p => p.name);
+    const currentIndex = planetsOnly.indexOf(targetFocus.name);
+    if (currentIndex !== -1) {
+        const prevIndex = (currentIndex - 1 + planetsOnly.length) % planetsOnly.length;
+        focusOn(planetsOnly[prevIndex]);
+    }
 };
 
-// --- Animation Loop ---
 function animate() {
     requestAnimationFrame(animate);
-
-    const time = Date.now() * 0.001;
-
-    // Axial Rotation Only (Infographic Specs)
     PLANETS_DATA.forEach(data => {
         const model = planetModels[data.name];
-        if (model) {
-            model.rotation.y += data.speed;
-        }
+        if (model) model.rotation.y += data.speed;
     });
+    if (moonOrbit) moonOrbit.rotation.y += 0.005;
+    if (moonModel) moonModel.rotation.y += 0.01;
 
-    if (moonOrbit) {
-        moonOrbit.rotation.y += 0.005; // Orbit speed
-    }
-
-    if (moonModel) {
-        moonModel.rotation.y += 0.01; // Axial speed
-    }
-
-    // Camera Lerp
     if (isMoving && targetFocus) {
         controls.enabled = false;
-
         if (targetFocus.isReset) {
             camera.position.lerp(targetFocus.camPos, 0.05);
             controls.target.lerp(targetFocus.target, 0.05);
-            if (camera.position.distanceTo(targetFocus.camPos) < 1) {
-                isMoving = false;
-                controls.enabled = false; // Disable in Overview
-            }
+            if (camera.position.distanceTo(targetFocus.camPos) < 1) isMoving = false;
         } else {
             const worldPos = new THREE.Vector3();
             planetModels[targetFocus.name].getWorldPosition(worldPos);
-
             const desiredPos = worldPos.clone().add(new THREE.Vector3(0, targetFocus.camOffset * 0.4, targetFocus.camOffset));
             camera.position.lerp(desiredPos, 0.07);
             controls.target.lerp(worldPos, 0.07);
-
-            if (camera.position.distanceTo(desiredPos) < 0.1) {
-                isMoving = false;
-                controls.enabled = true; // Enable only in focus
-            }
+            if (camera.position.distanceTo(desiredPos) < 0.1) { isMoving = false; controls.enabled = true; }
         }
     } else if (targetFocus && !targetFocus.isReset) {
         controls.enabled = true;
