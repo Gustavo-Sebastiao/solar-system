@@ -101,6 +101,7 @@ function hideLoading() {
 }
 
 function startCinematicIntro() {
+    console.log("Starting cinematic intro...");
     // Start close to the Sun
     camera.position.set(-1000, 100, 1000);
     controls.target.set(-1600, 0, 0);
