@@ -273,6 +273,8 @@ PLANETS_DATA.forEach(data => {
         onModelLoaded(data.name);
     }, undefined, (e) => {
         console.error(`Error loading ${data.name}:`, e);
+        const errorMsg = e && e.message ? e.message : "Erro desconhecido";
+        if (loadingText) loadingText.innerHTML += `<br><span style="color:red">Falha ${data.name}: ${errorMsg}</span>`;
         onModelLoaded(`${data.name} (falha)`);
     });
 });
